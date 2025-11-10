@@ -29,7 +29,18 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        run: |
+          docker build . --file Dockerfile --tag ${{ steps.meta.outputs.tags }}
+
+      - name: Scan Docker image with Trivy
+        uses: aquasecurity/trivy-action@v0.30.0
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: table
+          exit-on-vuln: true
+
+      - name: Push Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
