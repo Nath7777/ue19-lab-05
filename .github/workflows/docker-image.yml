@@ -1,3 +1,4 @@
+
 name: Publish Docker image
 
 on:
@@ -34,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: false
+          push: false       # Ne pousse pas encore
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -43,7 +44,7 @@ jobs:
         with:
           image-ref: ${{ steps.meta.outputs.tags }}
           format: table
-          exit-code: 1  
+          exit-code: 1      # Fait échouer le workflow si des vulnérabilités critiques sont trouvées
           ignore-unfixed: false
           vuln-type: os,library
 
