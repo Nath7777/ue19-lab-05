@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  push_to_registries:
+  build_scan_publish:
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -29,7 +29,27 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
 
-      - name: Build and push Docker image
+      - name: Build Docker image
+        id: build-image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Scan Docker image for vulnerabilities with Trivy
+        uses: aquasecurity/trivy-action@v0.28.0
+        with:
+          image-ref: ${{ steps.meta.outputs.tags }}
+          format: 'table'
+          exit-code: '1'          # Fail job if vulnerabilities found
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: Push Docker image
+        if: success()           # Only push if scan succeeded
         uses: docker/build-push-action@v4
         with:
           context: .
